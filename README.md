@@ -8,6 +8,9 @@
 
 [下载安装](#下载安装) · [使用指南](#使用指南) · [反馈问题](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/issues)
 
+[![Releases 附件累计下载次数](https://img.shields.io/github/downloads/HanaAyane/ZZZ-Idol-Desktop-Pet/total.svg?style=flat-square&label=total%20downloads)](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases)
+[![最新版附件下载次数](https://img.shields.io/github/downloads/HanaAyane/ZZZ-Idol-Desktop-Pet/latest/total.svg?style=flat-square&label=latest%20downloads)](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/latest)
+
 </div>
 
 <p align="center">
@@ -35,6 +38,8 @@
 </p>
 
 ## 下载安装
+
+顶部徽章自动显示所有 Releases 附件的累计下载次数与最新正式版的附件下载次数，更新有缓存延迟。统计包含 DMG、EXE、MSI 等上传附件；重复下载会累计，不代表独立用户数，也不包含 GitHub 自动生成的源码 ZIP/TAR 下载。
 
 macOS 与 Windows 最新版均为 **v0.1.1**，新增自定义计时与多时间点提醒。[查看更新说明](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.1)。
 
