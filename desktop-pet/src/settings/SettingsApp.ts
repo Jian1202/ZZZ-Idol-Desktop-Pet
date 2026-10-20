@@ -1,3 +1,4 @@
+import { enterRoom, showRoom } from "../room/client";
 import { getState as getPomodoroState, setVisible as setPomodoroVisible, subscribe as subscribePomodoro } from "../pomodoro/client";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -78,6 +79,13 @@ export class SettingsApp {
             ${this.switchRow("alwaysOnTop", "始终置顶", "让桌宠保持在普通窗口上方")}
             ${this.switchRow("gazeTracking", "鼠标视线追踪", "待机和漫步时让眼神跟随鼠标")}
           </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="room-title">
+          <div class="section-heading"><div><p class="eyebrow">LIVING SPACE</p><h2 id="room-title">妄想天使活动室</h2></div></div>
+          <div class="setting-list"><div class="setting-row"><span><strong>三个人的小小生活空间</strong><small>把桌宠拖进房间，一起漫步、坐沙发或躺坐垫；角色随房间同步缩放，拖动窗口边缘缩放至 20%，上沿切换昼夜</small></span><button type="button" data-open-room>打开活动室</button></div></div>
+          <div class="setting-list"><div class="setting-row"><span><strong>邀请角色</strong><small>也可以直接把桌宠拖进活动室；拖到家具上休息，拖出房间回到桌面</small></span><button type="button" data-room-invite>邀请三人入住</button></div></div>
+          <output data-room-error role="status"></output>
         </section>
 
         <section class="settings-section" aria-labelledby="pomodoro-title">
@@ -184,6 +192,27 @@ export class SettingsApp {
   }
 
   private bindControls(): void {
+    this.root.querySelector<HTMLButtonElement>("[data-open-room]")!.addEventListener("click", async () => {
+      const output = this.root.querySelector<HTMLOutputElement>("[data-room-error]")!;
+      try {
+        if (window.__TAURI_INTERNALS__) await showRoom();
+        else window.open("?window=room", "_blank");
+        output.textContent = "";
+      } catch (error) { output.textContent = String(error); }
+    });
+    this.root.querySelector<HTMLButtonElement>("[data-room-invite]")!.addEventListener("click", async event => {
+      const button = event.currentTarget as HTMLButtonElement;
+      const output = this.root.querySelector<HTMLOutputElement>("[data-room-error]")!;
+      button.disabled = true;
+      try {
+        const visible = CHARACTERS.filter(c => this.settings?.pets[c.id].visible);
+        if (!visible.length) throw new Error("请先显示至少一名桌宠角色");
+        await showRoom();
+        for (const c of visible) await enterRoom(c.id);
+        output.textContent = "";
+      } catch (error) { output.textContent = String(error); }
+      finally { button.disabled = false; }
+    });
     this.root.querySelectorAll<HTMLAnchorElement>(".author-links a").forEach((link) => {
       link.addEventListener("click", async (event) => {
         if (!window.__TAURI_INTERNALS__) return;

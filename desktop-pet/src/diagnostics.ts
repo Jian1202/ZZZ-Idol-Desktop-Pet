@@ -23,7 +23,7 @@ export interface DiagnosticExportResult {
 
 let installed = false;
 
-export function installFrontendDiagnostics(windowMode: "pet" | "settings" | "pomodoro"): void {
+export function installFrontendDiagnostics(windowMode: "pet" | "settings" | "pomodoro" | "room"): void {
   if (installed || !isNativeRuntime()) return;
   installed = true;
 

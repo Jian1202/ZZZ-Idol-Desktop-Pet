@@ -10,6 +10,8 @@ import { drawableBounds, measureLiftProfile, palmContact, projectLiftProfile,
 import type { WindowLiftGeometry } from "../pet/windowLiftGeometry";
 import { clampPetScale } from "../petScale";
 
+import { ROOM_POSE_LAYOUT, roomCharacterScale, RoomPoseController, type RoomPose } from "./RoomPoseController";
+
 const PET_VISUAL_WIDTH = 360;
 const PET_VISUAL_HEIGHT = 480;
 const HIT_TEST_PROBE_SIZE = 3;
@@ -123,6 +125,8 @@ export class SpineRenderer {
   private frameIntervalMs = 0;
   private framesRendered = 0;
   private completedActions = 0;
+  private roomPose: RoomPoseController | null = null;
+  private suspended = false;
 
   constructor(
     private readonly container: HTMLElement,
@@ -305,6 +309,17 @@ export class SpineRenderer {
     const nextScale = clampPetScale(scale);
     if (Math.abs(this.characterScale - nextScale) < 0.001) return;
     this.characterScale = nextScale;
+    this.fit();
+  }
+
+  setSuspended(suspended: boolean): void {
+    this.suspended = suspended;
+    if (suspended) this.stop(); else this.start();
+  }
+
+  setRoomPose(pose: RoomPose): void {
+    this.roomPose ??= new RoomPoseController();
+    this.roomPose.pose = pose;
     this.fit();
   }
 
@@ -606,7 +621,7 @@ export class SpineRenderer {
   };
 
   private start(): void {
-    if (this.running || this.contextLost || this.disposed || document.hidden) return;
+    if (this.running || this.contextLost || this.disposed || this.suspended || document.hidden) return;
     this.running = true;
     this.lastFrame = performance.now();
     this.animationFrame = requestAnimationFrame(this.tick);
@@ -645,11 +660,13 @@ export class SpineRenderer {
     // visual canvas. Keep character scale based on that visual canvas so the
     // extra pixels remain transparent swing safety space instead of enlarging
     // the character back into the window edges.
-    const visualWidth = Math.min(rect.width, PET_VISUAL_WIDTH);
-    const visualHeight = Math.min(rect.height, PET_VISUAL_HEIGHT);
+    const visualWidth = this.roomPose ? rect.width : Math.min(rect.width, PET_VISUAL_WIDTH);
+    const visualHeight = this.roomPose ? rect.height : Math.min(rect.height, PET_VISUAL_HEIGHT);
     const usableWidth = Math.max(visualWidth * this.definition.fitPadding, 40);
     const usableHeight = Math.max(visualHeight * this.definition.fitPadding, 40);
-    const scale = Math.min(usableWidth / sourceWidth, usableHeight / sourceHeight) * this.characterScale;
+    const scale = this.roomPose
+      ? roomCharacterScale(bounds, rect.width, rect.height, this.roomPose.pose, this.definition.fitPadding, this.characterScale)
+      : Math.min(usableWidth / sourceWidth, usableHeight / sourceHeight) * this.characterScale;
     const flipX = this.definition.flipX !== this.mirroredFromDefault ? -1 : 1;
     this.mesh.scale.set(scale * flipX, scale, scale);
     const centeredX = -(bounds.offsetX + sourceWidth / 2) * scale * flipX;
@@ -658,7 +675,20 @@ export class SpineRenderer {
     this.swayPivot.position.set(0, headTopY, 0);
     this.mesh.position.set(centeredX, centeredY - headTopY, 0);
     this.liftBasePosition.copy(this.mesh.position);
+    if (this.roomPose) this.anchorRoomPose();
     this.stabilizeLiftContact();
+  }
+
+  private anchorRoomPose(): void {
+    if (!this.mesh || !this.swayPivot || !this.roomPose || !this.stableFitBounds) return;
+    const h = this.container.getBoundingClientRect().height;
+    const hip = this.mesh.skeleton.findBone("身体");
+    const seated = this.roomPose.pose !== "stand";
+    const anchorX = seated && hip ? hip.worldX : this.stableFitBounds.offsetX + this.stableFitBounds.width / 2;
+    const anchorY = seated && hip ? hip.worldY : this.stableFitBounds.offsetY;
+    const layout = ROOM_POSE_LAYOUT[this.roomPose.pose];
+    this.mesh.position.x = -anchorX * this.mesh.scale.x;
+    this.mesh.position.y = h * (.5 - layout.anchorY) - anchorY * this.mesh.scale.y - this.swayPivot.position.y;
   }
 
   private stabilizeLiftContact(): void {
@@ -686,6 +716,18 @@ export class SpineRenderer {
   private updateMesh(delta: number): void {
     const mesh = this.mesh;
     if (!mesh) return;
+    if (this.roomPose) {
+      mesh.state.update(delta);
+      mesh.state.apply(mesh.skeleton);
+      mesh.skeleton.update(delta);
+      mesh.skeleton.updateWorldTransform(Physics.update);
+      try {
+        this.roomPose.apply(mesh.skeleton, delta);
+        this.anchorRoomPose();
+        this.applyGazeAndUpdateGeometry(delta);
+      } finally { this.roomPose.restore(); }
+      return;
+    }
     if (!this.gazeActive && Math.abs(this.gazeX) < 0.0001 && Math.abs(this.gazeY) < 0.0001) {
       mesh.update(delta);
       return;

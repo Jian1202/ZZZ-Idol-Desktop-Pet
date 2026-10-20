@@ -1,0 +1,30 @@
+html[data-window="room"], body[data-window="room"] { overflow: hidden; background: transparent; }
+body[data-window="room"] #app { position: relative; width: 100%; height: 100%; background: transparent; }
+.room-shell { position: absolute; container-type: inline-size; user-select: none; -webkit-user-select: none; color: #fff8ff; }
+/* Keep the supplied logo; draw the panel without the bitmap's pale bevel. */
+.room-frame-panel { position: absolute; left: 4.15%; right: .3%; top: 7.1%; bottom: .3%; background: #f067a2; border: .35cqw solid #d1368c; border-radius: 0 1.4cqw 1.4cqw 1.4cqw; pointer-events: none; }
+.room-frame-image { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; clip-path: polygon(0 0, 26.4% 0, 26.4% 8.1%, 98.8% 8.1%, 98.8% 15.1%, 4.4% 15.1%, 3.8% 17.6%, 0 17.6%); }
+.room-header { position: absolute; left: 29%; right: 2%; top: 7.3%; height: 8.4%; display: flex; align-items: center; gap: 2cqw; cursor: move; }
+.room-title { flex: 1; white-space: nowrap; font-size: 1.8cqw; letter-spacing: .16cqw; text-shadow: 0 1px #b52b75; }
+.room-tools { display: flex; align-items: center; gap: .8cqw; margin-left: auto; }
+.room-tools button { display: grid; place-items: center; width: clamp(16px, 3.8cqw, 44px); height: clamp(16px, 3.8cqw, 44px); border: 0; border-radius: 50%; background: transparent; color: #fff8ff; font: 600 clamp(11px, 2.4cqw, 28px)/1 sans-serif; padding: 0; cursor: pointer; }
+.room-tools button:hover { background: #fff3; }
+.room-tools button:focus-visible { outline: 2px solid white; outline-offset: -2px; }
+.room-viewport { position: absolute; left: var(--frame-left); right: var(--frame-right); top: var(--frame-top); bottom: var(--frame-bottom); border-radius: 0 0 .95cqw .95cqw; overflow: hidden; }
+.room-scene { position: relative; width: 100%; height: 100%; overflow: hidden; touch-action: none; }
+.room-background { position: absolute; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.room-character { position: absolute; transform: translate(-50%, -100%); cursor: grab; touch-action: none; }
+.room-character[data-pose="sofa"], .room-character[data-pose="cushion"] { transition: left .35s ease-out, top .35s ease-out; }
+.room-scene:active .room-character { cursor: grabbing; }
+.room-resize { position: absolute; z-index: 1000; touch-action: none; }
+.room-resize--north, .room-resize--south { left: 14px; right: 14px; height: 6px; cursor: ns-resize; }
+.room-resize--north { top: 0; } .room-resize--south { bottom: 0; }
+.room-resize--east, .room-resize--west { top: 14px; bottom: 14px; width: 6px; cursor: ew-resize; }
+.room-resize--east { right: 0; } .room-resize--west { left: 0; }
+.room-resize--northeast, .room-resize--northwest, .room-resize--southeast, .room-resize--southwest { width: 14px; height: 14px; }
+.room-resize--northeast { top: 0; right: 0; cursor: nesw-resize; }
+.room-resize--northwest { top: 0; left: 0; cursor: nwse-resize; }
+.room-resize--southeast { bottom: 0; right: 0; cursor: nwse-resize; }
+.room-resize--southwest { bottom: 0; left: 0; cursor: nesw-resize; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@container (max-width: 420px) { .room-title { visibility: hidden; } }

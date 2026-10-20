@@ -1,3 +1,4 @@
+mod room;
 mod pomodoro;
 mod pomodoro_audio;
 use std::{io::Write, sync::Mutex};
@@ -381,9 +382,10 @@ fn apply_system_settings(app: &tauri::AppHandle, settings: &AppSettings) -> Resu
                 .set_always_on_top(settings.always_on_top)
                 .map_err(|error| error.to_string())?;
             let currently_visible = window.is_visible().map_err(|error| error.to_string())?;
-            if pet.visible && !currently_visible {
+            let on_desktop = pet.visible && !app.state::<room::RoomManager>().contains(id);
+            if on_desktop && !currently_visible {
                 window.show().map_err(|error| error.to_string())?;
-            } else if !pet.visible && currently_visible {
+            } else if !on_desktop && currently_visible {
                 window.hide().map_err(|error| error.to_string())?;
             }
         }
@@ -394,6 +396,9 @@ fn apply_system_settings(app: &tauri::AppHandle, settings: &AppSettings) -> Resu
                 .set_focus()
                 .map_err(|error| error.to_string())?;
         }
+    }
+    if let Some(room) = app.get_webview_window("room") {
+        room.set_always_on_top(settings.always_on_top).map_err(|e| e.to_string())?;
     }
     let autostart = app.autolaunch();
     let enabled = autostart.is_enabled().map_err(|error| error.to_string())?;
@@ -1217,6 +1222,7 @@ pub fn run() {
         .manage(CoordinationManager::default())
         .manage(LastActivePet(Mutex::new(None)))
         .manage(WindowLiftManager::default())
+        .manage(room::RoomManager::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             log::info!(
@@ -1240,6 +1246,12 @@ pub fn run() {
             pomodoro::get_pomodoro_state,
             pomodoro::pomodoro_action,
             pomodoro::set_pomodoro_visible,
+            room::get_room_state,
+            room::show_room_window,
+            room::close_room_window,
+            room::invite_to_room,
+            room::try_enter_room,
+            room::leave_room,
             get_app_settings,
             update_app_settings,
             update_pet_settings,

@@ -1,3 +1,4 @@
+import { getRoom, subscribeRoom, type RoomSnapshot } from "../room/client";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { logCoordinationStatus, logWindowLiftStatus } from "../diagnostics";
@@ -119,6 +120,8 @@ export class PetApp {
   private currentActionIndex = 0;
   private validationRunning = false;
   private interactionEnabled = false;
+  private inRoom = false;
+  private roomRevision = -1;
   private pixelProbeSummary = "探针待加载";
   private skinBeforeWalking = "";
   private facingDirection: WalkDirection = "left";
@@ -365,6 +368,7 @@ export class PetApp {
     await this.coordinationController.mount();
     await this.roamingController.initialize(this.settings.pets[this.characterId].lastPlacement);
     await this.loadCharacter();
+    if (window.__TAURI_INTERNALS__) this.applyRoomState(await getRoom());
     await this.coordinationController.report(true);
   }
 
@@ -385,7 +389,22 @@ export class PetApp {
     delete window.__zzzPetDebug;
   }
 
+  private applyRoomState(state: RoomSnapshot): void {
+    if (state.revision < this.roomRevision) return;
+    this.roomRevision = state.revision;
+    this.inRoom = state.members.some(member => member.id === this.characterId);
+    this.renderer.setSuspended(this.inRoom);
+    this.setInteractionEnabled(Boolean(this.metadata) && !this.inRoom);
+    if (this.inRoom) {
+      void this.windowLiftController.detach("entered_room");
+      this.roamingController.interrupt();
+      void this.coordinationController.cancelActive("entered_room");
+    } else { void this.refreshRoamingPosition(); }
+    void this.coordinationController.report(true);
+  }
+
   private async bindAppEvents(): Promise<void> {
+    if (window.__TAURI_INTERNALS__) this.unlisteners.push(await subscribeRoom(s => this.applyRoomState(s)));
     this.unlisteners.push(
       await listenAppEvent(APP_SETTINGS_STATE, (settings) => this.applySettings(settings)),
     );
@@ -567,6 +586,14 @@ export class PetApp {
     this.coordinationController.gaze.setDirectInteraction(false);
     this.noteUserInteraction();
     await this.refreshRoamingPosition();
+    if (window.__TAURI_INTERNALS__) {
+      try {
+        if (await invoke<boolean>("try_enter_room")) {
+          this.applyRoomState(await getRoom());
+          return;
+        }
+      } catch (error) { console.error("拖入活动室失败", error); }
+    }
     if (this.liftAction) {
       await this.windowLiftController.notePetDragEnd(this.liftAction);
     }
@@ -1002,6 +1029,7 @@ export class PetApp {
   }
 
   private setInteractionEnabled(enabled: boolean): void {
+    enabled = enabled && !this.inRoom;
     this.interactionEnabled = enabled;
     this.interactionController.setEnabled(enabled);
     this.roamingController.setEnabled(
@@ -1106,7 +1134,7 @@ export class PetApp {
       interactionReady: this.interactionEnabled && this.activeRig === "main",
       debugOpen: !this.debugPanel.hidden,
       loaded: Boolean(this.metadata && diagnostics.loaded),
-      visible: petSettings?.visible ?? true,
+      visible: !this.inRoom && (petSettings?.visible ?? true),
       position: context,
       visualAnchor: context
         ? {

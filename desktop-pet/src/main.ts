@@ -2,11 +2,11 @@ import { isCharacterId } from "./characters";
 import type { CharacterId } from "./characters/types";
 import { installFrontendDiagnostics } from "./diagnostics";
 
-type WindowMode = "pet" | "settings" | "pomodoro";
+type WindowMode = "pet" | "settings" | "pomodoro" | "room";
 
 function getWindowMode(): WindowMode {
   const mode = new URLSearchParams(window.location.search).get("window");
-  return mode === "pomodoro" ? "pomodoro" : mode === "settings" ? "settings" : "pet";
+  return mode === "room" ? "room" : mode === "pomodoro" ? "pomodoro" : mode === "settings" ? "settings" : "pet";
 }
 
 function getPetCharacter(): CharacterId {
@@ -39,7 +39,15 @@ async function renderSettingsShell(root: HTMLElement) {
 window.addEventListener("DOMContentLoaded", async () => {
   const root = document.querySelector<HTMLElement>("#app");
   if (!root) throw new Error("Application root was not found.");
-  if (getWindowMode() === "pomodoro") {
+  if (getWindowMode() === "room") {
+    document.documentElement.dataset.window = "room";
+    document.body.dataset.window = "room";
+    const { RoomApp } = await import("./room/RoomApp");
+    const app = new RoomApp(root);
+    window.addEventListener("beforeunload", () => app.dispose(), { once: true });
+    await app.mount();
+  }
+  else if (getWindowMode() === "pomodoro") {
     document.documentElement.dataset.window = "pomodoro";
     document.body.dataset.window = "pomodoro";
     const { PomodoroApp } = await import("./pomodoro/PomodoroApp");
