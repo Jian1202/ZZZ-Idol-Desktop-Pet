@@ -7,6 +7,7 @@ import { ROOM_POSE_LAYOUT } from "../renderer/RoomPoseController";
 import { SpineRenderer } from "../renderer/SpineRenderer";
 import { shouldMirrorForFacingDirection } from "../pet/characterFacing";
 import { RoomWindowResizer } from "./RoomWindowResizer";
+import { RoomInteractionController } from "./RoomInteractionController";
 import { closeRoom, getRoom, leaveRoom, subscribeRoom, type RoomSnapshot, type RoomMember } from "./client";
 import { availableFurniture, clampFloor, FURNITURE, FURNITURE_FACING, furnitureAt, ROOM_FRAME_INSETS, roomFrameBounds, roomPeriod,
   stepToward, type FurnitureId, type RoomPoint, type RoomTheme } from "./roomGeometry";
@@ -16,6 +17,7 @@ interface Resident extends RoomPoint {
   id: CharacterId;
   element: HTMLElement;
   renderer: SpineRenderer;
+  interaction: RoomInteractionController;
   loaded: boolean;
   furniture: FurnitureId | null;
   pendingSeat: FurnitureId | null;
@@ -112,7 +114,8 @@ export class RoomApp {
         r.element.hidden = !s.pets[r.id].visible;
         r.renderer.setSuspended(r.element.hidden);
         r.renderer.setPerformance(s.performanceMode, s.frameRate);
-
+        r.interaction.setPreferences(s);
+        r.interaction.setAvailable(!r.furniture && !r.element.hidden);
       }
       this.renderControls();
     }));
@@ -131,14 +134,14 @@ export class RoomApp {
     this.scene.removeEventListener("pointerdown", this.pointerDown); this.scene.removeEventListener("pointermove", this.pointerMove);
     this.scene.removeEventListener("pointerup", this.pointerUp); this.scene.removeEventListener("pointercancel", this.pointerCancel);
     this.scene.removeEventListener("lostpointercapture", this.pointerCancel);
-    for (const r of this.residents.values()) r.renderer.dispose();
+    for (const r of this.residents.values()) { r.interaction.dispose(); r.renderer.dispose(); }
     this.residents.clear();
   }
   private reconcile(s: RoomSnapshot): void {
     if (this.disposed || s.revision < this.revision) return;
     this.revision = s.revision;
     for (const [id, r] of this.residents) if (!s.members.some(m => m.id === id)) {
-      r.renderer.dispose(); r.element.remove(); this.residents.delete(id);
+      r.interaction.dispose(); r.renderer.dispose(); r.element.remove(); this.residents.delete(id);
       if (this.drag?.id === id) this.drag = null;
     }
     for (const m of s.members) if (!this.residents.has(m.id)) void this.add(m);
@@ -148,24 +151,53 @@ export class RoomApp {
     const element = document.createElement("div"); element.className = "room-character"; element.dataset.character = m.id;
     element.setAttribute("aria-label", CHARACTER_BY_ID[m.id].displayName); this.scene.append(element);
     let renderer: SpineRenderer;
-    try { renderer = new SpineRenderer(element); renderer.setRoomPose("stand"); }
+    let interaction: RoomInteractionController | null = null;
+    try {
+      renderer = new SpineRenderer(element, {
+        onActionComplete: (action, loopCount, playbackId) => interaction?.handleActionComplete(action, loopCount, playbackId),
+      });
+      renderer.setRoomPose("stand");
+    }
     catch (error) {
       element.remove(); this.message(`无法创建角色画布：${String(error)}`);
       if (isNativeRuntime()) this.reconcile(await leaveRoom(m.id));
       return;
     }
-    const r: Resident = { ...clampFloor(m), id: m.id, element, renderer, loaded: false, furniture: null,
+    const def = CHARACTER_BY_ID[m.id];
+    interaction = new RoomInteractionController(element, {
+      play: (action, loop, overlay) => {
+        element.dataset.action = action;
+        return renderer.playAction(action, loop, overlay);
+      },
+      setOverlay: overlay => { renderer.setOverlay(overlay); },
+      onReaction: kind => {
+        r.target = null; r.pendingSeat = null; r.walking = false;
+        r.nextActionAt = performance.now() + 8000;
+        const label = kind === "doubleClick" ? "双击" : kind === "rapidClick" ? "连续点击" : "点击";
+        element.setAttribute("aria-label", `${def.displayName}，正在回应${label}`);
+        this.message(`${def.displayName}回应了你的${label}`);
+      },
+      onRest: () => {
+        r.nextActionAt = performance.now() + 4000;
+        element.setAttribute("aria-label", def.displayName);
+      },
+    });
+    const r: Resident = { ...clampFloor(m), id: m.id, element, renderer, interaction, loaded: false, furniture: null,
       pendingSeat: null, target: null, walking: false, nextActionAt: performance.now() + 3000 + Math.random() * 5000 };
     this.residents.set(m.id, r); this.position(r);
     try {
-      await renderer.loadCharacter(CHARACTER_BY_ID[m.id]);
+      const metadata = await renderer.loadCharacter(def);
       if (this.disposed || this.residents.get(m.id) !== r) return;
       r.loaded = true;
+      interaction.configure(def, metadata);
+      interaction.setPreferences({ clickEnabled: this.settings?.clickEnabled ?? true,
+        doubleClickEnabled: this.settings?.doubleClickEnabled ?? true });
       const initialSeat = furnitureAt(m, this.period);
       if (initialSeat && availableFurniture(this.residents.values(), initialSeat, r.id)) this.sit(r, initialSeat);
       renderer.setPerformance(this.settings?.performanceMode ?? "balanced", this.settings?.frameRate ?? "auto");
       element.hidden = this.settings?.pets[m.id].visible === false;
       renderer.setSuspended(element.hidden);
+      interaction.setAvailable(!r.furniture && !element.hidden);
       this.message(`${CHARACTER_BY_ID[m.id].displayName}入住了活动室`); this.renderControls();
     } catch (e) {
       if (this.residents.get(m.id) !== r || this.disposed) return;
@@ -212,6 +244,7 @@ export class RoomApp {
   private walkTo(r: Resident, point: RoomPoint, seat: FurnitureId | null = null): void {
     if (!r.loaded) return;
     r.furniture = null; r.pendingSeat = seat; r.renderer.setRoomPose("stand");
+    r.interaction.setAvailable(!r.element.hidden);
     Object.assign(r, clampFloor(r)); r.target = clampFloor(point);
     r.renderer.setHorizontalMirror(shouldMirrorForFacingDirection(r.renderer.getDiagnostics().currentSkin, r.target.x > r.x ? "right" : "left"));
     this.setWalking(r, true); this.position(r); this.renderControls();
@@ -230,6 +263,7 @@ export class RoomApp {
       r.pendingSeat = null; r.nextActionAt = performance.now() + 5000; return;
     }
     r.furniture = furniture; r.pendingSeat = null; r.target = null; this.setWalking(r, false);
+    r.interaction.setAvailable(false);
     r.renderer.setRoomPose(furniture === "sofa" ? "sit" : "recline");
     r.renderer.setHorizontalMirror(shouldMirrorForFacingDirection(r.renderer.getDiagnostics().currentSkin, FURNITURE_FACING[furniture]));
     Object.assign(r, FURNITURE[this.period][furniture]); r.nextActionAt = performance.now() + 20_000 + Math.random() * 20_000;
@@ -240,7 +274,7 @@ export class RoomApp {
     if (this.disposed) return;
     const delta = Math.min(.08, Math.max(0, (now - (this.lastFrame || now)) / 1000)); this.lastFrame = now;
     for (const r of this.residents.values()) {
-      if (!r.loaded || r.element.hidden || this.drag?.id === r.id || document.hidden) continue;
+      if (!r.loaded || r.element.hidden || this.drag?.id === r.id || r.interaction.isReacting() || document.hidden) continue;
       if (r.target) {
         Object.assign(r, stepToward(r, r.target, delta * .10 * (this.settings?.movementSpeed ?? 1)));
         if (Math.hypot(r.x - r.target.x, r.y - r.target.y) < .002) {
@@ -272,9 +306,11 @@ export class RoomApp {
   private readonly pointerMove = (e: PointerEvent) => {
     if (!this.drag || e.pointerId !== this.drag.pointerId) return;
     if (!this.drag.moved && Math.hypot(e.clientX-this.drag.startX, e.clientY-this.drag.startY) < 4) return;
-    this.drag.moved = true;
     const r = this.residents.get(this.drag.id); if (!r) return;
+    if (!this.drag.moved) r.interaction.cancelGesture();
+    this.drag.moved = true;
     r.furniture = null; r.renderer.setRoomPose("stand");
+    r.interaction.setAvailable(!r.element.hidden);
     const rect = this.scene.getBoundingClientRect();
     r.x = (e.clientX - rect.left) / rect.width - this.drag.offsetX;
     r.y = (e.clientY - rect.top) / rect.height - this.drag.offsetY;
@@ -284,7 +320,7 @@ export class RoomApp {
     const drag = this.drag; if (!drag || e.pointerId !== drag.pointerId) return;
     this.drag = null; if (this.scene.hasPointerCapture(e.pointerId)) this.scene.releasePointerCapture(e.pointerId);
     const r = this.residents.get(drag.id); if (!r) return;
-    if (!drag.moved) { r.nextActionAt = performance.now() + 8000; return; }
+    if (!drag.moved) { r.nextActionAt = performance.now() + 8000; r.interaction.click(); return; }
     const rect = this.scene.getBoundingClientRect();
     if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
       Object.assign(r, clampFloor(r)); this.position(r); void this.release(r.id, true); return;
@@ -296,8 +332,14 @@ export class RoomApp {
   };
   private readonly pointerCancel = () => {
     if (!this.drag) return;
-    const r = this.residents.get(this.drag.id); this.drag = null;
-    if (r) { Object.assign(r, clampFloor(r)); r.furniture = null; r.renderer.setRoomPose("stand"); this.position(r); }
+    const drag = this.drag, r = this.residents.get(drag.id); this.drag = null;
+    if (r) {
+      r.interaction.cancelGesture();
+      if (drag.moved) {
+        Object.assign(r, clampFloor(r)); r.furniture = null; r.renderer.setRoomPose("stand");
+        r.interaction.setAvailable(!r.element.hidden); this.position(r);
+      }
+    }
   };
   private async release(id: CharacterId, atCursor = false): Promise<void> {
     await this.run(async () => {

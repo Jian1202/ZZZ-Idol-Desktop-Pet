@@ -92,8 +92,9 @@ declare global {
 }
 
 export class PetInteractionController {
-  private readonly cursorDrivenDrag = supportsCursorDrivenDrag(navigator.userAgent);
-  private readonly nativeWindow = window.__TAURI_INTERNALS__ ? getCurrentWindow() : null;
+  private readonly cursorDrivenDrag: boolean;
+  private readonly nativeWindow: ReturnType<typeof getCurrentWindow> | null;
+  private readonly externalInput: boolean;
   private pointerId: number | null = null;
   private startX = 0;
   private startY = 0;
@@ -135,10 +136,17 @@ export class PetInteractionController {
   private readonly host: InteractionHost;
   private readonly now: () => number;
 
-  constructor(surface: HTMLElement, host: InteractionHost, now: () => number = Date.now) {
+  constructor(surface: HTMLElement, host: InteractionHost, now: () => number = Date.now,
+    options: { externalInput?: boolean } = {}) {
     this.surface = surface;
     this.host = host;
     this.now = now;
+    // Embedded residents already have an alpha-aware scene gesture handler.
+    // Reuse click recognition without dragging or changing the whole native window.
+    this.externalInput = options.externalInput ?? false;
+    this.cursorDrivenDrag = !this.externalInput && supportsCursorDrivenDrag(navigator.userAgent);
+    this.nativeWindow = !this.externalInput && window.__TAURI_INTERNALS__ ? getCurrentWindow() : null;
+    if (this.externalInput) return;
     surface.addEventListener("pointerdown", this.handlePointerDown);
     surface.addEventListener("pointerenter", this.handlePointerEnter);
     surface.addEventListener("pointerleave", this.handlePointerLeave);
@@ -164,6 +172,7 @@ export class PetInteractionController {
     void this.setPixelPassthrough(false, true);
     this.unlistenWindowMoved?.();
     this.unlistenWindowMoved = null;
+    if (this.externalInput) return;
     this.surface.removeEventListener("pointerdown", this.handlePointerDown);
     this.surface.removeEventListener("pointerenter", this.handlePointerEnter);
     this.surface.removeEventListener("pointerleave", this.handlePointerLeave);
