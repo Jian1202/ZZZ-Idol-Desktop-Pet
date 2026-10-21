@@ -45,6 +45,7 @@ export class RoomApp {
   private busy = false;
   private roaming = true;
   private clockTimer = 0;
+  private readonly preventContextMenu = (event: Event): void => event.preventDefault();
 
   constructor(private readonly root: HTMLElement) {
     try {
@@ -53,6 +54,7 @@ export class RoomApp {
       if (saved === "auto" || saved === "day" || saved === "night") this.theme = saved;
     } catch { /* Private storage may be unavailable. */ }
     document.title = "妄想天使活动室";
+    this.root.addEventListener("contextmenu", this.preventContextMenu);
     this.root.innerHTML = `
       <main class="room-shell" aria-label="妄想天使活动室">
         <div class="room-frame-panel" aria-hidden="true"></div>
@@ -128,6 +130,7 @@ export class RoomApp {
   }
   dispose(): void {
     this.disposed = true;
+    this.root.removeEventListener("contextmenu", this.preventContextMenu);
     cancelAnimationFrame(this.frame); window.clearInterval(this.clockTimer);
     this.unlisten.splice(0).forEach(f => f()); this.resizeObserver.disconnect();
     this.windowResizer.dispose();
