@@ -2,6 +2,9 @@ import { enterRoom, showRoom } from "../room/client";
 import { getState as getPomodoroState, setVisible as setPomodoroVisible, subscribe as subscribePomodoro } from "../pomodoro/client";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { getVersion } from "@tauri-apps/api/app";
+import { version as previewVersion } from "../../package.json";
+import { checkForUpdates, RELEASES_URL } from "./updates";
 import { CHARACTERS } from "../characters";
 import { APP_SETTINGS_STATE, COORDINATION_STATE, listenAppEvent } from "../characters/events";
 import type { CharacterId } from "../characters/types";
@@ -40,6 +43,8 @@ export class SettingsApp {
   private pendingPatch: AppSettingsPatch = {};
   private settings: AppSettings | null = null;
   private coordinationSnapshot: CoordinationSnapshot | null = null;
+  private updateRequest: AbortController | null = null;
+  private disposed = false;
 
   constructor(private readonly root: HTMLElement) {
     this.root.innerHTML = `
@@ -149,6 +154,19 @@ export class SettingsApp {
           <output class="diagnostics-path" data-diagnostics-path hidden></output>
         </section>
 
+        <section class="settings-section" aria-labelledby="updates-title">
+          <div class="section-heading"><div><p class="eyebrow">UPDATES</p><h2 id="updates-title">软件更新</h2></div></div>
+          <div class="setting-list"><div class="setting-row">
+            <span><strong data-current-version>正在读取当前版本…</strong><small>检查 GitHub 最新正式版，下载适合你系统的安装包完成更新。</small></span>
+            <button type="button" data-check-updates>检查更新</button>
+          </div></div>
+          <output class="update-status" data-update-status role="status" aria-live="polite">点击“检查更新”获取最新版本。</output>
+          <nav class="author-links update-links" aria-label="软件更新">
+            <a data-update-link href="${RELEASES_URL}" target="_blank" rel="noopener noreferrer">查看 GitHub Release <span aria-hidden="true">↗</span></a>
+          </nav>
+          <output class="author-link-error" data-update-link-error role="status" aria-live="polite" hidden></output>
+        </section>
+
         <section class="settings-section" aria-labelledby="author-title">
           <div class="section-heading"><div><p class="eyebrow">AUTHOR</p><h2 id="author-title">作者信息</h2></div></div>
           <p class="author-name">HanaAyane</p>
@@ -169,6 +187,9 @@ export class SettingsApp {
   }
 
   async mount(): Promise<void> {
+    void this.readCurrentVersion().catch(() => {
+      if (!this.disposed) this.requireElement("[data-current-version]").textContent = "当前版本读取失败，请重试检查更新";
+    });
     this.unlisteners.push(
       await listenAppEvent(APP_SETTINGS_STATE, (settings) => this.renderSettings(settings)),
       await listenAppEvent(COORDINATION_STATE, (snapshot) => this.renderCoordinationState(snapshot)),
@@ -187,11 +208,16 @@ export class SettingsApp {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.updateRequest?.abort();
     if (this.saveTimer !== null) window.clearTimeout(this.saveTimer);
     this.unlisteners.splice(0).forEach((unlisten) => unlisten());
   }
 
   private bindControls(): void {
+    this.requireElement("[data-check-updates]").addEventListener("click", () => {
+      void this.checkUpdates();
+    });
     this.root.querySelector<HTMLButtonElement>("[data-open-room]")!.addEventListener("click", async () => {
       const output = this.root.querySelector<HTMLOutputElement>("[data-room-error]")!;
       try {
@@ -217,7 +243,8 @@ export class SettingsApp {
       link.addEventListener("click", async (event) => {
         if (!window.__TAURI_INTERNALS__) return;
         event.preventDefault();
-        const status = this.root.querySelector<HTMLOutputElement>("[data-author-link-error]")!;
+        const status = this.requireElement<HTMLOutputElement>(link.hasAttribute("data-update-link")
+          ? "[data-update-link-error]" : "[data-author-link-error]");
         status.hidden = true;
         try {
           await openUrl(link.href);
@@ -290,6 +317,53 @@ export class SettingsApp {
     this.root.querySelector<HTMLButtonElement>("[data-diagnostics-action='export']")?.addEventListener("click", (event) => {
       void this.exportDiagnostics(event.currentTarget as HTMLButtonElement);
     });
+  }
+
+  private async readCurrentVersion(): Promise<string> {
+    const version = window.__TAURI_INTERNALS__ ? await getVersion() : previewVersion;
+    if (!this.disposed) this.requireElement("[data-current-version]").textContent = `当前版本：v${version}`;
+    return version;
+  }
+
+  private async checkUpdates(): Promise<void> {
+    if (this.updateRequest) return;
+    const request = new AbortController();
+    this.updateRequest = request;
+    const button = this.requireElement<HTMLButtonElement>("[data-check-updates]");
+    const status = this.requireElement<HTMLOutputElement>("[data-update-status]");
+    const link = this.requireElement<HTMLAnchorElement>("[data-update-link]");
+    button.disabled = true;
+    button.textContent = "正在检查…";
+    status.textContent = "正在连接 GitHub…";
+    status.classList.remove("settings-status--error");
+    link.href = RELEASES_URL;
+    link.textContent = "查看 GitHub Release ↗";
+    this.requireElement<HTMLOutputElement>("[data-update-link-error]").hidden = true;
+    try {
+      const currentVersion = await this.readCurrentVersion();
+      if (this.disposed) return;
+      const result = await checkForUpdates(currentVersion, { signal: request.signal });
+      if (this.disposed) return;
+      if (result.status === "available") {
+        status.textContent = `发现新版本 v${result.latestVersion}（当前 v${currentVersion}）。请前往 GitHub 下载并安装。`;
+        link.textContent = "前往 GitHub 更新 ↗";
+      } else if (result.status === "current") {
+        status.textContent = `当前已是最新正式版 v${currentVersion}。`;
+      } else {
+        status.textContent = `当前版本 v${currentVersion} 高于最新正式版 v${result.latestVersion}，无需更新。`;
+      }
+      link.href = result.releaseUrl;
+    } catch (error) {
+      if (this.disposed) return;
+      status.textContent = `检查失败：${error instanceof Error ? error.message : String(error)}`;
+      status.classList.add("settings-status--error");
+    } finally {
+      this.updateRequest = null;
+      if (!this.disposed) {
+        button.disabled = false;
+        button.textContent = "检查更新";
+      }
+    }
   }
 
   private async refreshDiagnostics(): Promise<void> {

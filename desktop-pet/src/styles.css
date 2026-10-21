@@ -316,6 +316,27 @@ body[data-window="settings"] {
   background: rgba(255, 255, 255, 0.035);
 }
 
+.update-status {
+  display: block;
+  margin-top: 8px;
+  color: #9bf0bd;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.update-status.settings-status--error {
+  color: #ff91a4;
+}
+
+.update-links {
+  margin-top: 14px;
+}
+
+[data-check-updates] {
+  flex-shrink: 0;
+}
+
 .setting-list {
   display: grid;
 }
@@ -440,7 +461,8 @@ body[data-window="settings"] {
   gap: 10px;
 }
 
-.diagnostics-actions button {
+.diagnostics-actions button,
+[data-check-updates] {
   min-height: 36px;
   padding: 0 15px;
   border: 1px solid rgba(245, 170, 199, 0.32);
@@ -450,14 +472,21 @@ body[data-window="settings"] {
   cursor: pointer;
 }
 
-.diagnostics-actions button:hover:not(:disabled) {
+.diagnostics-actions button:hover:not(:disabled),
+[data-check-updates]:hover:not(:disabled) {
   border-color: rgba(245, 170, 199, 0.55);
   background: rgba(224, 118, 160, 0.22);
 }
 
-.diagnostics-actions button:disabled {
+.diagnostics-actions button:disabled,
+[data-check-updates]:disabled {
   cursor: wait;
   opacity: 0.5;
+}
+
+[data-check-updates]:focus-visible {
+  outline: 2px solid #ffc0d8;
+  outline-offset: 3px;
 }
 
 .diagnostics-path {
