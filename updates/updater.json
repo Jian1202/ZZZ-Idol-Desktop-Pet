@@ -1,0 +1,19 @@
+{
+  "version": "0.1.22",
+  "notes": "# v0.1.22 · Windows 一键更新\n\n- 设置页支持检查签名新版、查看更新说明、显示下载进度，并一键安装重启。\n- 下载完成且签名验证通过后，保存设置和计时状态，再启动安装器。\n- 更新清单直接从静态文件或 Release 附件读取，不消耗匿名 GitHub API 额度。\n- NSIS 与 MSI 分别使用匹配的更新包，保留原有手动下载入口。\n- 发布构建生成安装包签名与更新清单；正式发布后自动同步静态更新信息。\n\nWindows x64 用户优先下载 EXE。v0.1.21 及更早版本需先退出桌宠并手动安装本版，以后发布签名新版时才能在设置页一键更新。Windows 可能显示安装进度或权限确认。\n\n此版本仅提供 Windows 包。与原作者版本共用应用标识和配置，更新源仅指向本 fork。\n\n安装包随附 SHA256SUMS.txt、BUILD-INFO.txt、签名文件、updater.json 与 WINDOWS-TESTING.md。\n\n自动化验证不能替代安装后的桌面交互与跨版本升级验收。\n",
+  "pub_date": "2026-10-30T08:30:07.769Z",
+  "platforms": {
+    "windows-x86_64-nsis": {
+      "url": "https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.22/ZZZ.Idol.Desktop.Pet_0.1.22_x64-setup.exe",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVScGhLK0l1Zy84RU51MzgrV0hiVStTZHB0SnI0SjZySG4xUjd5YUFieVRsVkwwdERGWDQzNkZka2JBMFhjZzIrbEdjZlZMNDRmcFhDTTJZeFlaa1pRTXZYV0Y3M2ZmUUFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMzQ5MDA3CWZpbGU6WlpaIElkb2wgRGVza3RvcCBQZXRfMC4xLjIyX3g2NC1zZXR1cC5leGUKK1QrTHR6UW1LS3NLS3Z6Szl3bnpmUlVBTGN0cWM4UjlwejVZRmZjdXQ4OGhHZWlNM1VFUitreTUwaEl0QkVhOGU1MGl2ZlpYRml0VUxid2dXRzdsQ3c9PQo="
+    },
+    "windows-x86_64": {
+      "url": "https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.22/ZZZ.Idol.Desktop.Pet_0.1.22_x64-setup.exe",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVScGhLK0l1Zy84RU51MzgrV0hiVStTZHB0SnI0SjZySG4xUjd5YUFieVRsVkwwdERGWDQzNkZka2JBMFhjZzIrbEdjZlZMNDRmcFhDTTJZeFlaa1pRTXZYV0Y3M2ZmUUFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMzQ5MDA3CWZpbGU6WlpaIElkb2wgRGVza3RvcCBQZXRfMC4xLjIyX3g2NC1zZXR1cC5leGUKK1QrTHR6UW1LS3NLS3Z6Szl3bnpmUlVBTGN0cWM4UjlwejVZRmZjdXQ4OGhHZWlNM1VFUitreTUwaEl0QkVhOGU1MGl2ZlpYRml0VUxid2dXRzdsQ3c9PQo="
+    },
+    "windows-x86_64-msi": {
+      "url": "https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.22/ZZZ.Idol.Desktop.Pet_0.1.22_x64_en-US.msi",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVScGhLK0l1Zy84RUNKd082QnhmVGl5dTd2MnhqQ2ZpOFhCbTJ1QVlKK1lKaGFaSk12ZnNCVUxHeEJtS3BpNm83Y2JHWjY2TmYyaGg0NTlVUW5WV3ZYYk5uR3hkMHl2RUFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMzQ5MDA3CWZpbGU6WlpaIElkb2wgRGVza3RvcCBQZXRfMC4xLjIyX3g2NF9lbi1VUy5tc2kKcVJCKzQ5a1MvQXNnRWxIUWY1OC9SeXZXc3BGTS9UdjZVM28yL1VTTHNOaG5ocDhXeW9ic2NWWko0bWNpWjNsZ0ZBam5nL1pVVzFDYWVvTHJ3U2pDQlE9PQo="
+    }
+  }
+}
