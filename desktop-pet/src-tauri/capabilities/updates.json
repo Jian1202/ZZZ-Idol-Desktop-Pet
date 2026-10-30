@@ -8,8 +8,8 @@
     {
       "identifier": "opener:allow-open-url",
       "allow": [
-        { "url": "https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases" },
-        { "url": "https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/tag/*" }
+        { "url": "https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases" },
+        { "url": "https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/tag/*" }
       ]
     }
   ]

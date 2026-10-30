@@ -1,5 +1,5 @@
-export const RELEASES_URL = "https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases";
-export const LATEST_RELEASE_API = "https://api.github.com/repos/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/latest";
+export const RELEASES_URL = "https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases";
+export const LATEST_RELEASE_API = "https://api.github.com/repos/Jian1202/ZZZ-Idol-Desktop-Pet/releases/latest";
 
 interface Version {
   core: bigint[];

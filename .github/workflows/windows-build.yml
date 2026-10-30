@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags: ["v*"]
     paths:
       - ".github/workflows/windows-build.yml"
       - "desktop-pet/**"
@@ -59,11 +60,19 @@ jobs:
       - name: Check Rust workspace
         run: cargo check --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc
 
+      - name: Test Rust library
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked --lib
+
       - name: Generate unique test version
         id: version
         shell: pwsh
         run: |
           $version = "0.1.${{ github.run_number }}"
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $version = "${{ github.ref_name }}" -replace '^v', ''
+            $configured = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+            if ($version -ne $configured) { throw "发布标签与应用版本不一致" }
+          }
           @{ version = $version } | ConvertTo-Json | Set-Content -Encoding utf8 src-tauri/tauri.windows-ci.conf.json
           "value=$version" >> $env:GITHUB_OUTPUT
 
