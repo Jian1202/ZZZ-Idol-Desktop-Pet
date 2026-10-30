@@ -46,16 +46,16 @@
 
 顶部徽章自动显示所有 Releases 附件的累计下载次数与最新正式版的附件下载次数，更新有缓存延迟。统计包含 DMG、EXE、MSI 等上传附件；重复下载会累计，不代表独立用户数，也不包含 GitHub 自动生成的源码 ZIP/TAR 下载。
 
-本 fork 的 Windows 最新正式版为 **v0.1.2**，新增活动室与软件更新检查。[查看更新说明](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.2)。
+本 fork 的 Windows 最新正式版为 **v0.1.21**，补齐角色右键菜单和托盘菜单的活动室入口，保留活动室与软件更新检查。[查看更新说明](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.21)。
 
 | 系统 | 下载 | 安装方式 |
 | :--- | :--- | :--- |
-| Windows · x64（本 fork） | [下载 v0.1.2 EXE](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.2/ZZZ.Idol.Desktop.Pet_0.1.2_x64-setup.exe) | 运行安装向导；[MSI 可选](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.2/ZZZ.Idol.Desktop.Pet_0.1.2_x64_en-US.msi) |
-| macOS · Apple Silicon（原作者版本） | [下载上游 v0.1.1 DMG](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.1/ZZZ-Idol-Desktop-Pet_0.1.1_aarch64.dmg) | 打开后将应用拖入「应用程序」；不包含本 fork v0.1.2 的新增功能 |
+| Windows · x64（本 fork） | [下载 v0.1.21 EXE](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.21/ZZZ.Idol.Desktop.Pet_0.1.21_x64-setup.exe) | 运行安装向导；[MSI 可选](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.21/ZZZ.Idol.Desktop.Pet_0.1.21_x64_en-US.msi) |
+| macOS · Apple Silicon（原作者版本） | [下载上游 v0.1.1 DMG](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/download/v0.1.1/ZZZ-Idol-Desktop-Pet_0.1.1_aarch64.dmg) | 打开后将应用拖入「应用程序」；不包含本 fork v0.1.21 的新增功能 |
 
 macOS 暂无 Intel 安装包，首次打开可能被系统拦截，请查看 [原作者 macOS 安装说明](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.1)。本次发布仅提供 Windows x64。
 
-本 fork 安装包的「检查更新」只查询 [本仓库正式 Release](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases)，不会自动下载安装，也不会跳转到原作者的更新版本。两边安装包沿用相同应用标识，会作为同一应用升级并共用配置，不支持独立并排安装。旧 CI 测试包的版本号可能高于 0.1.2，迁移方式见本版更新说明。
+本 fork 安装包的「检查更新」只查询 [本仓库正式 Release](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases)，不会自动下载安装，也不会跳转到原作者的更新版本。两边安装包沿用相同应用标识，会作为同一应用升级并共用配置，不支持独立并排安装。旧 CI 测试包的版本号可能高于 0.1.21，迁移方式见本版更新说明。
 
 Release 随附 `SHA256SUMS.txt`、`BUILD-INFO.txt` 和 Windows 实机验收清单，可核对下载完整性与源码来源。
 
@@ -67,7 +67,7 @@ Release 随附 `SHA256SUMS.txt`、`BUILD-INFO.txt` 和 Windows 实机验收清�
 4. **打开番茄钟**，从设置或菜单进入。默认每组 2 轮，专注 25 分钟、休息 5 分钟，开始前可自行调整。
 5. **需要按自己的节奏提醒时**，切换到「自定义计时」，设置总时长和多个提醒点。例如计时 120 分钟，在第 25、45、90 分钟分别提醒。
 
-6. **打开活动室**，体验家具互动和日夜背景；非坐姿角色可继续进行点击互动。
+6. **打开活动室**，可从角色右键菜单或托盘菜单直接进入，也可在设置页打开；体验家具互动和日夜背景；非坐姿角色可继续进行点击互动。
 7. **检查软件更新**，在设置页点击「检查更新」，发现新版后前往本 fork 的 Release 下载。
 
 设置快捷键：macOS `⌘ ,` / Windows `Ctrl + ,`。番茄钟关闭窗口后继续计时；退出并重启应用后，进度恢复为暂停，点击继续即可。
