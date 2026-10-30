@@ -46,7 +46,7 @@
 
 顶部徽章自动显示所有 Releases 附件的累计下载次数与最新正式版的附件下载次数，更新有缓存延迟。统计包含 DMG、EXE、MSI 等上传附件；重复下载会累计，不代表独立用户数，也不包含 GitHub 自动生成的源码 ZIP/TAR 下载。
 
-本 fork 的 Windows 最新正式版为 **v0.1.21**，补齐角色右键菜单和托盘菜单的活动室入口，保留活动室与软件更新检查。[查看更新说明](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.21)。
+本 fork 的 Windows 最新正式版为 **v0.1.21**，补齐角色右键菜单和托盘菜单的活动室入口，修复 GitHub API 限流导致无法检查更新的问题。[查看更新说明](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.21)。
 
 | 系统 | 下载 | 安装方式 |
 | :--- | :--- | :--- |
@@ -55,7 +55,7 @@
 
 macOS 暂无 Intel 安装包，首次打开可能被系统拦截，请查看 [原作者 macOS 安装说明](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.1)。本次发布仅提供 Windows x64。
 
-本 fork 安装包的「检查更新」只查询 [本仓库正式 Release](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases)，不会自动下载安装，也不会跳转到原作者的更新版本。两边安装包沿用相同应用标识，会作为同一应用升级并共用配置，不支持独立并排安装。旧 CI 测试包的版本号可能高于 0.1.21，迁移方式见本版更新说明。
+本 fork 安装包的「检查更新」查询 [本仓库正式 Release](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases)；API 限流时自动使用由发布工作流同步的备用版本信息。更新仍需手动下载安装。两边安装包沿用相同应用标识，会作为同一应用升级并共用配置，不支持独立并排安装。旧 CI 测试包的版本号可能高于 0.1.21，迁移方式见本版更新说明。
 
 Release 随附 `SHA256SUMS.txt`、`BUILD-INFO.txt` 和 Windows 实机验收清单，可核对下载完整性与源码来源。
 
