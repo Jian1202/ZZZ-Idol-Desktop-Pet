@@ -758,8 +758,7 @@ fn require_settings_window(window: &WebviewWindow) -> Result<(), String> {
 #[tauri::command]
 fn prepare_for_update(window: WebviewWindow) -> Result<(), String> {
     require_settings_window(&window)?;
-    window.app_handle().state::<pomodoro::PomodoroManager>().checkpoint();
-    Ok(())
+    window.app_handle().state::<pomodoro::PomodoroManager>().checkpoint_for_update()
 }
 
 #[tauri::command]

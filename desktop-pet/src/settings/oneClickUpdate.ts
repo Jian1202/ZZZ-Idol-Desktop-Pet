@@ -32,3 +32,18 @@ export async function installVerifiedUpdate(
   onProgress({ phase: "installing", downloaded, total });
   await update.install({ restartAfterInstall: true });
 }
+
+// 保存失败保留待写入设置；仅在写入成功后清空，重试仍需完成计时检查点。
+export async function prepareUpdateState<T extends object>(
+  readPending: () => T,
+  clearPending: () => void,
+  save: (patch: T) => Promise<unknown>,
+  checkpoint: () => Promise<unknown>,
+): Promise<void> {
+  const pending = readPending();
+  if (Object.keys(pending).length) {
+    await save(pending);
+    clearPending();
+  }
+  await checkpoint();
+}

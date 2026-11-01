@@ -3,7 +3,7 @@ import { getState as getPomodoroState, setVisible as setPomodoroVisible, subscri
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
-import { installVerifiedUpdate, type InstallableUpdate } from "./oneClickUpdate";
+import { installVerifiedUpdate, prepareUpdateState, type InstallableUpdate } from "./oneClickUpdate";
 import { getVersion } from "@tauri-apps/api/app";
 import { version as previewVersion } from "../../package.json";
 import { checkForUpdates, RELEASES_URL } from "./updates";
@@ -430,10 +430,12 @@ export class SettingsApp {
         if (this.saveTimer !== null) window.clearTimeout(this.saveTimer);
         this.saveTimer = null;
         await this.queuedSave;
-        const pending = this.pendingPatch;
-        this.pendingPatch = {};
-        if (Object.keys(pending).length) await updateAppSettings(pending);
-        await invoke("prepare_for_update");
+        await prepareUpdateState(
+          () => this.pendingPatch,
+          () => { this.pendingPatch = {}; },
+          updateAppSettings,
+          () => invoke("prepare_for_update"),
+        );
       }, state => {
         if (this.disposed) return;
         if (state.phase === "downloading") {
