@@ -55,9 +55,16 @@
 
 macOS 暂无 Intel 安装包，首次打开可能被系统拦截，请查看 [原作者 macOS 安装说明](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/releases/tag/v0.1.1)。本次发布仅提供 Windows x64。
 
-本 fork 安装包的「检查更新」查询 [本仓库正式 Release](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases)；API 限流时自动使用由发布工作流同步的备用版本信息。Windows 从 v0.1.22 开始支持「一键更新并重启」，下载成功并验证签名后才会启动安装器；首次从旧版升级至 v0.1.22 仍需手动安装。网络或签名检查失败时可改用手动下载。开发分支已修复安装前的状态保存：设置或计时进度写入失败会中止安装，保留待保存设置，重新检查后可重试；此修复尚未包含在 v0.1.22 安装包中。两边安装包沿用相同应用标识，会作为同一应用升级并共用配置，不支持独立并排安装。旧 CI 测试包的版本号可能高于 0.1.22，迁移方式见本版更新说明。
+本 fork 安装包的「检查更新」查询 [本仓库正式 Release](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases)；API 限流时自动使用由发布工作流同步的备用版本信息。Windows 从 v0.1.22 开始支持「一键更新并重启」，下载成功并验证签名后才会启动安装器；首次从旧版升级至 v0.1.22 仍需手动安装。网络或签名检查失败时可改用手动下载。两边安装包沿用相同应用标识，会作为同一应用升级并共用配置，不支持独立并排安装。旧 CI 测试包的版本号可能高于 0.1.22，迁移方式见本版更新说明。
 
 Release 随附 `SHA256SUMS.txt`、`BUILD-INFO.txt` 和 Windows 实机验收清单，可核对下载完整性与源码来源。
+
+## 修复与上游进展
+
+- 最新正式安装包仍为 v0.1.22。main 中的 7ceac3e 已修复安装前计时持久化错误未阻止安装、设置保存失败后重试丢失待保存内容两处问题，尚未发布到正式安装包。
+- [修复构建](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/actions/runs/41304394390) 已通过 164 项前端测试、41 项 Rust 测试及 Windows EXE/MSI 打包；CI 测试包的版本号不代表正式发布版本。
+- 上游活动室入口 [#3](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/pull/3) 与限流修复 [#5](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/pull/5) 已合并。一键更新 [#7](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/pull/7) 为可评审 PR，作者已确认上述两处修复通过。
+- 作者另发现连续修改设置时，旧失败请求可能覆盖新成功值的并发边界问题，并接手补充修复；本 fork 尚未包含该后续修复。上游将与前端 PR #8 整合并完成真实跨版本下载、安装与重启验收后安排发布。
 
 ## 使用指南
 
