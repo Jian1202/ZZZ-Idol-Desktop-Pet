@@ -6,7 +6,7 @@
 
 让爱芮、南宫、千夏住进你的桌面，陪你互动、漫步与专注。
 
-[下载安装](#下载安装) · [使用指南](#使用指南) · [反馈问题](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/issues)
+[下载安装](#下载安装) · [使用指南](#使用指南) · [反馈问题](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/issues)
 
 [![Releases 附件累计下载次数](https://img.shields.io/github/downloads/Jian1202/ZZZ-Idol-Desktop-Pet/total.svg?style=flat-square&label=total%20downloads)](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases)
 [![最新版附件下载次数](https://img.shields.io/github/downloads/Jian1202/ZZZ-Idol-Desktop-Pet/latest/total.svg?style=flat-square&label=latest%20downloads)](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/releases/latest)
@@ -59,12 +59,11 @@ macOS 暂无 Intel 安装包，首次打开可能被系统拦截，请查看 [�
 
 Release 随附 `SHA256SUMS.txt`、`BUILD-INFO.txt` 和 Windows 实机验收清单，可核对下载完整性与源码来源。
 
-## 修复与上游进展
+## 源码与发布进展
 
-- 最新正式安装包仍为 v0.1.22。main 中的 7ceac3e 已修复安装前计时持久化错误未阻止安装、设置保存失败后重试丢失待保存内容两处问题，尚未发布到正式安装包。
-- [修复构建](https://github.com/Jian1202/ZZZ-Idol-Desktop-Pet/actions/runs/41304394390) 已通过 164 项前端测试、41 项 Rust 测试及 Windows EXE/MSI 打包；CI 测试包的版本号不代表正式发布版本。
-- 上游活动室入口 [#3](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/pull/3) 与限流修复 [#5](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/pull/5) 已合并。一键更新 [#7](https://github.com/HanaAyane/ZZZ-Idol-Desktop-Pet/pull/7) 为可评审 PR，作者已确认上述两处修复通过。
-- 作者另发现连续修改设置时，旧失败请求可能覆盖新成功值的并发边界问题，并接手补充修复；本 fork 尚未包含该后续修复。上游将与前端 PR #8 整合并完成真实跨版本下载、安装与重启验收后安排发布。
+main 已合入上游 v0.1.3，源码版本为 **0.1.23**：包含新版番茄钟/设置界面、贡献者信息、安装前状态保存修复，以及设置写入串行化修复。上游 PR #7、#8 已合并；原作者已完成其发布包的隔离环境跨版本升级验收。
+
+本 fork 继续使用自己的 Release、备用版本源和签名公钥。**本 fork 最新正式安装包仍为 v0.1.22**，尚未发布上述合并内容；源码版本不代表已有对应下载包。后续 Windows 构建跟随上游仅提供 EXE，旧 MSI 用户迁移时需先卸载旧版再安装 EXE。
 
 ## 使用指南
 
